@@ -147,6 +147,9 @@
         .cactus-display, .seedling-display {
             text-align: center;
             margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 20px;
         }
 
         .large-cactus {
@@ -190,6 +193,26 @@
         .water-btn.completed {
             background: #8BC34A;
             cursor: not-allowed;
+        }
+
+        .edit-btn {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #2196F3;
+            border-radius: 12px;
+            background: white;
+            color: #2196F3;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: #2196F3;
+            color: white;
+            transform: translateY(-1px);
         }
 
         .history-section {
@@ -244,17 +267,17 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
+            font-weight: 600;
             color: #333;
         }
 
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -263,24 +286,53 @@
             background: white;
         }
 
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #4CAF50;
         }
 
-        .reminder-toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            background: white;
+        .cactus-picker {
+            margin-top: 25px;
         }
 
-        .reminder-toggle input[type="checkbox"] {
-            width: auto;
-            margin: 0;
+        .picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .cactus-option {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cactus-option:hover {
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .cactus-option.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .cactus-option .emoji {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+
+        .cactus-option .name {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
         }
 
         .slots-full-message {
@@ -328,13 +380,15 @@
             
             <div class="detail-content">
                 <div class="cactus-display">
-                    <div class="large-cactus" id="detail-cactus">🌱</div>
-                    <div class="state-label" id="detail-state">Seedling</div>
+                    <div class="large-cactus" id="detail-cactus">🌰</div>
+                    <div class="state-label" id="detail-state">Seed</div>
                 </div>
                 
                 <div class="streak-counter" id="detail-streak">🔥 0 Day Streak</div>
                 
                 <button class="water-btn" id="water-btn" onclick="waterHabit()">💧 Water</button>
+                
+                <button class="edit-btn" onclick="showEditScreen()">✏️ Edit Habit</button>
                 
                 <div class="history-section">
                     <h3>Last 7 Days</h3>
@@ -344,7 +398,7 @@
                 </div>
                 
                 <div class="milestone-info" id="milestone-info">
-                    Next milestone: 🌵 at 7 days
+                    Next milestone: 🌱 at 3 consecutive days
                 </div>
             </div>
         </div>
@@ -359,33 +413,52 @@
             
             <div class="form-content">
                 <div class="seedling-display">
-                    <div class="large-cactus">🌱</div>
-                    <div class="state-label">Seedling</div>
+                    <div class="large-cactus" id="preview-cactus">🌰</div>
+                    <div class="state-label">Seed Stage • Will grow with consistency!</div>
                 </div>
                 
                 <div class="form-group">
                     <label>Habit Name</label>
-                    <input type="text" id="habit-name" placeholder="Exercise" oninput="validateForm()">
+                    <input type="text" id="habit-name" placeholder="Exercise, Read, Meditate..." oninput="validateForm()">
                 </div>
                 
-                <div class="form-group">
-                    <label>Category (Optional)</label>
-                    <select id="habit-category">
-                        <option value="">Select category</option>
-                        <option value="health">Health & Fitness</option>
-                        <option value="productivity">Productivity</option>
-                        <option value="mindfulness">Mindfulness</option>
-                        <option value="learning">Learning</option>
-                        <option value="creative">Creative</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Daily Reminder</label>
-                    <div class="reminder-toggle">
-                        <span>7:00 AM</span>
-                        <input type="checkbox" id="habit-reminder">
+                <div class="cactus-picker">
+                    <label>Choose Your Plant</label>
+                    <div class="picker-grid" id="cactus-picker-grid">
+                        <!-- Cactus options will be generated by JavaScript -->
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Habit View -->
+        <div id="edit-screen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showDetailScreen(currentHabitId)">←</button>
+                <h2>Edit Habit</h2>
+                <button class="save-btn" id="edit-save-btn" onclick="saveEditedHabit()" disabled>Save</button>
+            </div>
+            
+            <div class="form-content">
+                <div class="seedling-display">
+                    <div class="large-cactus" id="edit-preview-cactus">🌰</div>
+                    <div class="state-label" id="edit-stage-label">Current Stage</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Habit Name</label>
+                    <input type="text" id="edit-habit-name" placeholder="Exercise, Read, Meditate..." oninput="validateEditForm()">
+                </div>
+                
+                <div class="cactus-picker">
+                    <label>Choose Your Plant</label>
+                    <div class="picker-grid" id="edit-cactus-picker-grid">
+                        <!-- Cactus options will be generated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 0.9rem; color: #856404;">
+                    <strong>💡 Note:</strong> Editing preserves all your progress and streak data!
                 </div>
             </div>
         </div>
@@ -395,11 +468,55 @@
         // Global state
         let habits = [];
         let currentHabitId = null;
+        let selectedCactusType = 'classic';
+        let editSelectedCactusType = 'classic';
+
+        // Cactus types with their growth stages
+        const cactusTypes = {
+            classic: {
+                name: 'Classic',
+                stages: ['🌰', '🌱', '🌵', '🌵✨', '🌵🌸', '🌵🌺🌟']
+            },
+            herb: {
+                name: 'Herb',
+                stages: ['🌰', '🌱', '🌿', '🌿✨', '🌿🌸', '🌿🌺🌟']
+            },
+            pine: {
+                name: 'Pine',
+                stages: ['🌰', '🌱', '🌲', '🌲✨', '🌲🌸', '🌲🌺🌟']
+            },
+            oak: {
+                name: 'Oak',
+                stages: ['🌰', '🌱', '🌳', '🌳✨', '🌳🌸', '🌳🌺🌟']
+            },
+            palm: {
+                name: 'Palm',
+                stages: ['🌰', '🌱', '🌴', '🌴✨', '🌴🌸', '🌴🌺🌟']
+            },
+            potted: {
+                name: 'Potted',
+                stages: ['🌰', '🌱', '🪴', '🪴✨', '🪴🌸', '🪴🌺🌟']
+            },
+            hibiscus: {
+                name: 'Hibiscus',
+                stages: ['🌰', '🌱', '🌺', '🌺✨', '🌺🌸', '🌺🌟💫']
+            },
+            sunflower: {
+                name: 'Sunflower',
+                stages: ['🌰', '🌱', '🌻', '🌻✨', '🌻🌸', '🌻🌟💫']
+            },
+            rose: {
+                name: 'Rose',
+                stages: ['🌰', '🌱', '🌹', '🌹✨', '🌹🌸', '🌹🌟💫']
+            }
+        };
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             loadHabits();
             renderGarden();
+            renderCactusPicker();
+            renderEditCactusPicker();
         });
 
         // Storage functions
@@ -411,6 +528,12 @@
             const stored = localStorage.getItem('habitGardenData');
             if (stored) {
                 habits = JSON.parse(stored);
+                // Migrate old habits to have cactusType
+                habits.forEach(habit => {
+                    if (!habit.cactusType) {
+                        habit.cactusType = 'classic';
+                    }
+                });
             }
         }
 
@@ -419,35 +542,66 @@
             return new Date().toISOString().split('T')[0];
         }
 
-        function getHabitState(habit) {
+        function getConsecutiveStreak(habit) {
+            if (habit.completions.length === 0) return 0;
+            
             const today = getTodayString();
-            const lastCompletion = habit.completions[habit.completions.length - 1];
+            const sortedCompletions = [...habit.completions].sort().reverse();
+            let streak = 0;
+            let currentDate = new Date();
             
-            if (habit.streak === 0) return 'seedling';
-            
-            if (lastCompletion !== today && habit.streak > 0) {
+            // Check if completed today
+            if (sortedCompletions[0] === today) {
+                streak = 1;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                // Check if completed yesterday
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 const yesterdayString = yesterday.toISOString().split('T')[0];
                 
-                if (lastCompletion !== yesterdayString && lastCompletion !== today) {
-                    return 'wilting';
+                if (sortedCompletions[0] !== yesterdayString) {
+                    return 0; // Streak broken
+                }
+                currentDate = yesterday;
+                currentDate.setDate(currentDate.getDate() - 1);
+            }
+            
+            // Count consecutive days backwards
+            for (let i = streak; i < sortedCompletions.length; i++) {
+                const expectedDate = currentDate.toISOString().split('T')[0];
+                if (sortedCompletions[i] === expectedDate) {
+                    streak++;
+                    currentDate.setDate(currentDate.getDate() - 1);
+                } else {
+                    break;
                 }
             }
             
-            if (habit.streak >= 21) return 'blooming';
-            if (habit.streak >= 7) return 'growing';
-            return 'seedling';
+            return streak;
         }
 
-        function getCactusEmoji(state) {
-            switch (state) {
-                case 'seedling': return '🌱';
-                case 'growing': return '🌵';
-                case 'blooming': return '🌸';
-                case 'wilting': return '🥀';
-                default: return '🌱';
-            }
+        function getGrowthStage(habit) {
+            const streak = getConsecutiveStreak(habit);
+            
+            if (streak === 0) return 0; // Seed
+            if (streak < 3) return 0; // Still seed until 3 days
+            if (streak < 10) return 1; // Sprout at 3-9 days
+            if (streak < 17) return 2; // Young plant at 10-16 days
+            if (streak < 24) return 3; // Growing at 17-23 days
+            if (streak < 31) return 4; // Flowering at 24-30 days
+            return 5; // Magnificent at 31+ days
+        }
+
+        function getCactusEmoji(habit) {
+            const stage = getGrowthStage(habit);
+            const cactusType = cactusTypes[habit.cactusType] || cactusTypes.classic;
+            return cactusType.stages[stage] || cactusType.stages[0];
+        }
+
+        function getStageLabel(stage) {
+            const labels = ['Seed', 'Sprout', 'Young', 'Growing', 'Flowering', 'Magnificent'];
+            return labels[stage] || 'Seed';
         }
 
         function isCompletedToday(habit) {
@@ -473,8 +627,8 @@
             }
             showScreen('add-screen');
             document.getElementById('habit-name').value = '';
-            document.getElementById('habit-category').value = '';
-            document.getElementById('habit-reminder').checked = false;
+            selectedCactusType = 'classic';
+            updateCactusSelection();
             validateForm();
         }
 
@@ -485,6 +639,123 @@
 
             showScreen('detail-screen');
             renderDetailView(habit);
+        }
+
+        function showEditScreen() {
+            if (!currentHabitId) return;
+            
+            const habit = habits.find(h => h.id === currentHabitId);
+            if (!habit) return;
+
+            showScreen('edit-screen');
+            
+            // Pre-populate the form with current habit data
+            document.getElementById('edit-habit-name').value = habit.name;
+            editSelectedCactusType = habit.cactusType;
+            
+            // Update the preview to show current stage
+            const stage = getGrowthStage(habit);
+            document.getElementById('edit-preview-cactus').textContent = getCactusEmoji(habit);
+            document.getElementById('edit-stage-label').textContent = `Current Stage: ${getStageLabel(stage)}`;
+            
+            updateEditCactusSelection();
+            validateEditForm();
+        }
+
+        // Cactus picker rendering
+        function renderCactusPicker() {
+            const grid = document.getElementById('cactus-picker-grid');
+            grid.innerHTML = '';
+            
+            Object.entries(cactusTypes).forEach(([type, data]) => {
+                const option = document.createElement('div');
+                option.className = 'cactus-option';
+                option.innerHTML = `
+                    <div class="emoji">${data.stages[2]}</div>
+                    <div class="name">${data.name}</div>
+                `;
+                option.onclick = () => selectCactusType(type);
+                grid.appendChild(option);
+            });
+            
+            updateCactusSelection();
+        }
+
+        function renderEditCactusPicker() {
+            const grid = document.getElementById('edit-cactus-picker-grid');
+            grid.innerHTML = '';
+            
+            Object.entries(cactusTypes).forEach(([type, data]) => {
+                const option = document.createElement('div');
+                option.className = 'cactus-option';
+                option.innerHTML = `
+                    <div class="emoji">${data.stages[2]}</div>
+                    <div class="name">${data.name}</div>
+                `;
+                option.onclick = () => selectEditCactusType(type);
+                grid.appendChild(option);
+            });
+            
+            updateEditCactusSelection();
+        }
+
+        function selectCactusType(type) {
+            selectedCactusType = type;
+            updateCactusSelection();
+            updatePreview();
+            validateForm();
+        }
+
+        function selectEditCactusType(type) {
+            editSelectedCactusType = type;
+            updateEditCactusSelection();
+            updateEditPreview();
+            validateEditForm();
+        }
+
+        function updateCactusSelection() {
+            const options = document.querySelectorAll('#cactus-picker-grid .cactus-option');
+            options.forEach((option, index) => {
+                const types = Object.keys(cactusTypes);
+                if (types[index] === selectedCactusType) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+
+        function updateEditCactusSelection() {
+            const options = document.querySelectorAll('#edit-cactus-picker-grid .cactus-option');
+            options.forEach((option, index) => {
+                const types = Object.keys(cactusTypes);
+                if (types[index] === editSelectedCactusType) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+
+        function updatePreview() {
+            const previewCactus = document.getElementById('preview-cactus');
+            if (previewCactus) {
+                previewCactus.textContent = '🌰'; // Always show seed for new habits
+            }
+        }
+
+        function updateEditPreview() {
+            if (!currentHabitId) return;
+            
+            const habit = habits.find(h => h.id === currentHabitId);
+            if (!habit) return;
+            
+            // Create a temporary habit object with the new cactus type
+            const tempHabit = { ...habit, cactusType: editSelectedCactusType };
+            const stage = getGrowthStage(tempHabit);
+            
+            document.getElementById('edit-preview-cactus').textContent = getCactusEmoji(tempHabit);
+            document.getElementById('edit-stage-label').textContent = `Current Stage: ${getStageLabel(stage)}`;
         }
 
         // Garden rendering
@@ -502,11 +773,11 @@
                 const habit = habits[i];
                 if (habit) {
                     slot.classList.add('occupied');
-                    const state = getHabitState(habit);
+                    const streak = getConsecutiveStreak(habit);
                     slot.innerHTML = `
-                        <div class="cactus-emoji">${getCactusEmoji(state)}</div>
+                        <div class="cactus-emoji">${getCactusEmoji(habit)}</div>
                         <div class="habit-name">${habit.name}</div>
-                        <div class="habit-streak">${habit.streak > 0 ? `(Day ${habit.streak})` : '(New)'}</div>
+                        <div class="habit-streak">${streak > 0 ? `${streak} day streak` : 'New'}</div>
                     `;
                     slot.onclick = () => showDetailScreen(habit.id);
                 } else {
@@ -531,13 +802,14 @@
 
         // Detail view rendering
         function renderDetailView(habit) {
-            const state = getHabitState(habit);
+            const stage = getGrowthStage(habit);
+            const streak = getConsecutiveStreak(habit);
             const completedToday = isCompletedToday(habit);
             
             document.getElementById('detail-habit-name').textContent = habit.name;
-            document.getElementById('detail-cactus').textContent = getCactusEmoji(state);
-            document.getElementById('detail-state').textContent = state.charAt(0).toUpperCase() + state.slice(1);
-            document.getElementById('detail-streak').textContent = `🔥 ${habit.streak} Day Streak`;
+            document.getElementById('detail-cactus').textContent = getCactusEmoji(habit);
+            document.getElementById('detail-state').textContent = getStageLabel(stage);
+            document.getElementById('detail-streak').textContent = `🔥 ${streak} Day Streak`;
             
             const waterBtn = document.getElementById('water-btn');
             if (completedToday) {
@@ -551,7 +823,7 @@
             }
             
             renderLast7Days(habit);
-            renderMilestoneInfo(habit);
+            renderMilestoneInfo(habit, stage, streak);
         }
 
         function renderLast7Days(habit) {
@@ -580,15 +852,20 @@
             }
         }
 
-        function renderMilestoneInfo(habit) {
+        function renderMilestoneInfo(habit, stage, streak) {
             const milestoneInfo = document.getElementById('milestone-info');
             
-            if (habit.streak < 7) {
-                milestoneInfo.textContent = 'Next milestone: 🌵 at 7 days';
-            } else if (habit.streak >= 7 && habit.streak < 21) {
-                milestoneInfo.textContent = 'Next milestone: 🌸 at 21 days';
+            if (stage === 0 && streak === 0) {
+                milestoneInfo.textContent = 'Start your journey: 🌱 sprout at 3 consecutive days';
+            } else if (stage === 0) {
+                milestoneInfo.textContent = `${3 - streak} more consecutive days to sprout 🌱`;
+            } else if (stage === 1) {
+                milestoneInfo.textContent = `${10 - streak} more days to grow into a ${cactusTypes[habit.cactusType].stages[2]}`;
+            } else if (stage < 5) {
+                const nextMilestone = (stage + 1) * 7 + 3;
+                milestoneInfo.textContent = `${nextMilestone - streak} more days to next growth stage`;
             } else {
-                milestoneInfo.textContent = '🌸 You\'re blooming! Keep it up!';
+                milestoneInfo.textContent = '🌟 You\'ve reached the highest growth! Keep nurturing your habit!';
             }
         }
 
@@ -601,17 +878,6 @@
             habit.completions.push(today);
             habit.completions.sort();
             
-            // Calculate new streak
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayString = yesterday.toISOString().split('T')[0];
-            
-            if (habit.completions.includes(yesterdayString) || habit.streak === 0) {
-                habit.streak = habit.streak + 1;
-            } else {
-                habit.streak = 1; // Reset streak if there was a gap
-            }
-            
             saveHabits();
             renderDetailView(habit);
         }
@@ -623,16 +889,31 @@
             const habit = {
                 id: Date.now(),
                 name: name,
-                category: document.getElementById('habit-category').value,
-                reminder: document.getElementById('habit-reminder').checked,
+                cactusType: selectedCactusType,
                 completions: [],
-                streak: 0,
                 createdAt: getTodayString()
             };
             
             habits.push(habit);
             saveHabits();
             showGardenScreen();
+        }
+
+        function saveEditedHabit() {
+            if (!currentHabitId) return;
+            
+            const habit = habits.find(h => h.id === currentHabitId);
+            if (!habit) return;
+            
+            const newName = document.getElementById('edit-habit-name').value.trim();
+            if (!newName) return;
+            
+            // Update habit with new values
+            habit.name = newName;
+            habit.cactusType = editSelectedCactusType;
+            
+            saveHabits();
+            showDetailScreen(currentHabitId); // Return to detail view
         }
 
         function deleteHabit() {
@@ -649,7 +930,18 @@
             const name = document.getElementById('habit-name').value.trim();
             const saveBtn = document.getElementById('save-btn');
             
-            if (name && habits.length < 9) {
+            if (name && selectedCactusType && habits.length < 9) {
+                saveBtn.disabled = false;
+            } else {
+                saveBtn.disabled = true;
+            }
+        }
+
+        function validateEditForm() {
+            const name = document.getElementById('edit-habit-name').value.trim();
+            const saveBtn = document.getElementById('edit-save-btn');
+            
+            if (name && editSelectedCactusType) {
                 saveBtn.disabled = false;
             } else {
                 saveBtn.disabled = true;
